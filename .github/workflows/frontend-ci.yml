@@ -26,6 +26,25 @@ jobs:
       - name: 🔍 Debug - List dist files
         run: ls -la dist
 
+      - name: 🧠 Debug - Show root folder contents
+        run: ls -la
+
+      - name: 🔍 Debug - Show dist folder contents
+        run: ls -la dist || echo "dist folder not found!"
+
+      - name: 📤 Copy dist/ to EC2
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "dist/*"
+          target: "/home/${{ secrets.EC2_USERNAME }}/frontend-temp"
+          strip_components: 0
+          overwrite: true
+
+
       - name: 📤 Copy dist/ to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
