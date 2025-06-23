@@ -1,0 +1,53 @@
+name: Frontend CI/CD to EC2
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Frontend (Vite)
+        run: npm run build
+
+      - name:  Debug: List dist files
+        run: ls -la dist
+
+      - name: Copy dist/ to EC2 Temp Directory
+        uses: appleboy/scp-action@v0.1.4
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          source: "./dist/*"
+          target: "/home/${{ secrets.EC2_USERNAME }}/frontend-temp"
+          strip_components: 0
+          overwrite: true
+          debug: true
+
+      - name: Move dist files to /var/www/html and Restart NGINX
+        uses: appleboy/ssh-action@v1.0.0
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USERNAME }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          script: |
+            sudo mkdir -p /var/www/html
+            sudo rm -rf /var/www/html/*
+            sudo cp -r /home/${{ secrets.EC2_USERNAME }}/frontend-temp/* /var/www/html/
+            sudo systemctl restart nginx
