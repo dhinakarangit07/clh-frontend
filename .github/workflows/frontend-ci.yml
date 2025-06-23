@@ -9,37 +9,36 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: 🧰 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Install Dependencies
+      - name: 📦 Install Dependencies
         run: npm install
 
-      - name: Build Frontend (Vite)
+      - name: 🛠️ Build Frontend (Vite)
         run: npm run build
 
-      - name:  Debug: List dist files
+      - name: 🔍 Debug - List dist files
         run: ls -la dist
 
-      - name: Copy dist/ to EC2 Temp Directory
+      - name: 📤 Copy dist/ to EC2
         uses: appleboy/scp-action@v0.1.4
         with:
           host: ${{ secrets.EC2_HOST }}
           username: ${{ secrets.EC2_USERNAME }}
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
-          source: "./dist/*"
+          source: "dist/*"
           target: "/home/${{ secrets.EC2_USERNAME }}/frontend-temp"
           strip_components: 0
           overwrite: true
-          debug: true
 
-      - name: Move dist files to /var/www/html and Restart NGINX
+      - name: 🚀 Deploy to /var/www/html and Restart NGINX
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.EC2_HOST }}
